@@ -3,13 +3,24 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import ScanInput from '@/components/ScanInput'
+import WalletConnect from '@/components/WalletConnect'
+import NetworkBadge from '@/components/NetworkBadge'
 import { scanContract } from '@/lib/api'
 import type { Finding } from '@/types/findings'
+import type { StellarNetwork } from '@/types/stellar'
+import { NETWORKS } from '@/types/stellar'
 
 export default function HomePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [walletKey, setWalletKey] = useState<string | null>(null)
+  const [walletNetwork, setWalletNetwork] = useState<StellarNetwork>(NETWORKS.testnet)
+
+  function handleWalletConnect(publicKey: string, network: StellarNetwork) {
+    setWalletKey(publicKey)
+    setWalletNetwork(network)
+  }
 
   async function handleScan(source: string) {
     setLoading(true)
@@ -42,6 +53,7 @@ export default function HomePage() {
             <GithubIcon />
             Veritas Vaults Network
           </a>
+          <WalletConnect onConnect={handleWalletConnect} />
         </div>
       </header>
 
@@ -52,7 +64,11 @@ export default function HomePage() {
             <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
             Soroban Smart Contract Security
           </div>
-          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+          {walletKey && (
+            <div className="mb-3 flex justify-center">
+              <NetworkBadge network={walletNetwork} />
+            </div>
+          )}          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
             Find vulnerabilities{' '}
             <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
               before attackers do

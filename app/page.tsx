@@ -6,6 +6,7 @@ import ScanInput from '@/components/ScanInput'
 import WalletConnect from '@/components/WalletConnect'
 import NetworkBadge from '@/components/NetworkBadge'
 import { scanContract } from '@/lib/api'
+import { encodeFindings } from '@/lib/share'
 import type { Finding } from '@/types/findings'
 import type { StellarNetwork } from '@/types/stellar'
 import { NETWORKS } from '@/types/stellar'
@@ -27,9 +28,9 @@ export default function HomePage() {
     setError(null)
     try {
       const data = await scanContract(source)
-      // Store results in sessionStorage so the results page can read them
+      const encoded = encodeFindings(data.findings)
       sessionStorage.setItem('sg_findings', JSON.stringify(data.findings))
-      router.push('/results')
+      router.push(`/results?r=${encoded}`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unexpected error'
       setError(msg)

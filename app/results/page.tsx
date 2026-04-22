@@ -1,17 +1,29 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { Finding, Severity } from '@/types/findings'
+import { decodeFindings } from '@/lib/share'
 import FindingsTable from '@/components/FindingsTable'
 import EmptyState from '@/components/EmptyState'
 import SeverityBadge from '@/components/SeverityBadge'
 
 export default function ResultsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [findings, setFindings] = useState<Finding[] | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
+    const encoded = searchParams.get('r')
+    if (encoded) {
+      const decoded = decodeFindings(encoded)
+      if (decoded.length > 0) {
+        setFindings(decoded)
+        return
+      }
+    }
+
     const raw = sessionStorage.getItem('sg_findings')
     if (!raw) {
       router.replace('/')
@@ -22,11 +34,18 @@ export default function ResultsPage() {
     } catch {
       router.replace('/')
     }
-  }, [router])
+  }, [router, searchParams])
 
   function handleScanAnother() {
     sessionStorage.removeItem('sg_findings')
     router.push('/')
+  }
+
+  function handleShare() {
+    const url = window.location.href
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   if (findings === null) {
@@ -56,12 +75,21 @@ export default function ResultsPage() {
             </svg>
             Soroban Guard
           </button>
-          <button
-            onClick={handleScanAnother}
-            className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-500"
-          >
-            Scan another contract
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleShare}
+              className="rounded-lg border border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+              title="Copy results URL to clipboard"
+            >
+              {copied ? '✓ Copied' : 'Share results'}
+            </button>
+            <button
+              onClick={handleScanAnother}
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-500"
+            >
+              Scan another contract
+            </button>
+          </div>
         </div>
       </header>
 

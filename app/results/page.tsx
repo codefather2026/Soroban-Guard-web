@@ -1,18 +1,30 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { Finding, Severity } from '@/types/findings'
+import { decodeFindings } from '@/lib/share'
 import FindingsTable from '@/components/FindingsTable'
 import EmptyState from '@/components/EmptyState'
 import SeverityBadge from '@/components/SeverityBadge'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function ResultsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [findings, setFindings] = useState<Finding[] | null>(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
+    const encoded = searchParams.get('r')
+    if (encoded) {
+      const decoded = decodeFindings(encoded)
+      if (decoded.length > 0) {
+        setFindings(decoded)
+        return
+      }
+    }
+
     const raw = sessionStorage.getItem('sg_findings')
     if (!raw) {
       router.replace('/')
@@ -23,22 +35,18 @@ export default function ResultsPage() {
     } catch {
       router.replace('/')
     }
-  }, [router])
+  }, [router, searchParams])
 
   function handleScanAnother() {
     sessionStorage.removeItem('sg_findings')
     router.push('/')
   }
 
-  async function handleCopyJson() {
-    if (!findings) return
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(findings, null, 2))
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard API unavailable
-    }
+  function handleShare() {
+    const url = window.location.href
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   if (findings === null) {
@@ -59,7 +67,7 @@ export default function ResultsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Nav */}
-      <header className="border-b border-[#2a2d3a] bg-[#0f1117]/80 backdrop-blur-sm">
+      <header className="border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <button
             onClick={handleScanAnother}
@@ -70,12 +78,15 @@ export default function ResultsPage() {
             </svg>
             Soroban Guard
           </button>
-          <button
-            onClick={handleScanAnother}
-            className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-500"
-          >
-            Scan another contract
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleScanAnother}
+              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-500"
+            >
+              Scan another contract
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -167,7 +178,7 @@ export default function ResultsPage() {
         )}
       </main>
 
-      <footer className="border-t border-[#2a2d3a] py-6 text-center text-xs text-slate-600">
+      <footer className="border-t border-[var(--border)] py-6 text-center text-xs text-slate-600">
         Soroban Guard · Veritas Vaults Network
       </footer>
     </div>
@@ -179,7 +190,7 @@ function SummaryCard({
   value,
   color,
   bg,
-  border = 'border-[#2a2d3a]',
+  border = 'border-[var(--border)]',
 }: {
   label: string
   value: number

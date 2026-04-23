@@ -7,9 +7,10 @@ type InputMode = 'code' | 'github' | 'contractId'
 interface Props {
   onScan: (source: string) => void
   loading: boolean
+  countdown?: number
 }
 
-export default function ScanInput({ onScan, loading }: Props) {
+export default function ScanInput({ onScan, loading, countdown = 0 }: Props) {
   const [mode, setMode] = useState<InputMode>('code')
   const [code, setCode] = useState('')
   const [repoUrl, setRepoUrl] = useState('')
@@ -37,8 +38,11 @@ export default function ScanInput({ onScan, loading }: Props) {
     }
   }
 
+  const isRateLimited = countdown > 0
+
   const canSubmit =
     !loading &&
+    !isRateLimited &&
     (mode === 'code'
       ? code.trim().length > 0
       : mode === 'github'
@@ -146,7 +150,14 @@ export default function ScanInput({ onScan, loading }: Props) {
           disabled={!canSubmit}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
         >
-          {loading ? (
+          {isRateLimited ? (
+            <>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Rate limited — retry in {countdown}s
+            </>
+          ) : loading ? (
             <>
               <svg className="spinner h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" d="M12 2a10 10 0 0 1 10 10" />

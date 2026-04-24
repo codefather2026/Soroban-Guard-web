@@ -32,6 +32,14 @@ export async function scanContract(source: string): Promise<ScanResponse> {
       throw new ApiError(429, 'Rate limited', retryAfter)
     }
     const text = await res.text().catch(() => 'Unknown error')
+    
+    // Handle rate limiting
+    if (res.status === 429) {
+      const retryAfter = res.headers.get('Retry-After')
+      const retrySeconds = retryAfter ? parseInt(retryAfter, 10) : undefined
+      throw new ApiError(res.status, text || `HTTP ${res.status}`, retrySeconds)
+    }
+    
     throw new ApiError(res.status, text || `HTTP ${res.status}`)
   }
 

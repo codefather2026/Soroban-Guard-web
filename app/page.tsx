@@ -7,7 +7,7 @@ import WalletConnect from '@/components/WalletConnect'
 import NetworkBadge from '@/components/NetworkBadge'
 import NetworkHealthBanner from '@/components/NetworkHealthBanner'
 import ThemeToggle from '@/components/ThemeToggle'
-import { scanContract } from '@/lib/api'
+import { scanContract, ApiError } from '@/lib/api'
 import { checkNetworkHealth } from '@/lib/stellar'
 import { useWallet } from '@/lib/WalletContext'
 import ContractIdBadge from '@/components/ContractIdBadge'
@@ -37,9 +37,16 @@ export default function HomePage() {
       sessionStorage.setItem('sg_duration', duration)
       router.push(`/results?r=${encoded}`)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unexpected error'
-      setError(msg)
-      setStatusMessage('')
+      if (err instanceof ApiError && err.status === 429 && err.retryAfter) {
+        pendingSourceRef.current = source
+        setCountdown(err.retryAfter)
+        setError(null)
+        setStatusMessage(`Rate limited. Retrying in ${err.retryAfter}s…`)
+      } else {
+        const msg = err instanceof Error ? err.message : 'Unexpected error'
+        setError(msg)
+        setStatusMessage('')
+      }
     } finally {
       setLoading(false)
     }
@@ -135,7 +142,16 @@ export default function HomePage() {
 
           {/* Scan card */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-6 text-left shadow-2xl">
-            <ScanInput onScan={handleScan} loading={loading} />
+            <ScanInput onScan={handleScan} loading={loading} countdown={countdown} />
+
+            {countdown > 0 && (
+              <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+                <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Rate limited — retrying automatically in {countdown}s</span>
+              </div>
+            )}
 
             {error && (
               <div className="mt-4 flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">

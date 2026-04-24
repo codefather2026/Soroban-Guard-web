@@ -15,7 +15,15 @@ import type { Finding } from '@/types/findings'
 import type { ContractScanRecord } from '@/types/stellar'
 import { NETWORKS } from '@/types/stellar'
 
-export default function HomePage() {
+export default function Page() {
+  return (
+    <Suspense>
+      <HomePage />
+    </Suspense>
+  )
+}
+
+function HomePage() {
   const router = useRouter()
   const { publicKey: walletKey, network: walletNetwork } = useWallet()
   const [loading, setLoading] = useState(false)
@@ -111,6 +119,12 @@ export default function HomePage() {
           <Logo />
           <div className="flex items-center gap-3">
             <a
+              href="/history"
+              className="rounded-lg px-3 py-1.5 text-sm text-slate-400 ring-1 ring-[var(--border)] transition hover:text-white"
+            >
+              History
+            </a>
+            <a
               href="https://github.com/Veritas-Vaults-Network"
               target="_blank"
               rel="noopener noreferrer"
@@ -160,7 +174,7 @@ export default function HomePage() {
 
           {/* Scan card */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] p-6 text-left shadow-2xl">
-            <ScanInput onScan={handleScan} loading={loading} countdown={countdown} />
+            <ScanInput onScan={handleScan} loading={loading} countdown={countdown} initialValue={initialSource} />
 
             {countdown > 0 && (
               <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">

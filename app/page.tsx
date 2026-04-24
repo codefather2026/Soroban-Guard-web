@@ -27,7 +27,12 @@ export default function HomePage() {
   async function handleScan(source: string) {
     setLoading(true)
     setError(null)
+    setRateLimitCountdown(null)
     setStatusMessage('Scanning your contract…')
+    
+    // Store the source for potential auto-retry
+    sessionStorage.setItem('sg_last_scan_source', source)
+    
     try {
       const t0 = Date.now()
       const data = await scanContract(source)
@@ -56,14 +61,26 @@ export default function HomePage() {
   async function handleHistoryClick(contractId: string) {
     setLoading(true)
     setError(null)
+    setRateLimitCountdown(null)
+    
+    // Store the source for potential auto-retry
+    sessionStorage.setItem('sg_last_scan_source', contractId)
+    
     try {
       const data = await scanContract(contractId)
       sessionStorage.setItem('sg_findings', JSON.stringify(data.findings))
       sessionStorage.removeItem('sg_duration')
       router.push('/results')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unexpected error'
-      setError(msg)
+      if (err instanceof ApiError && err.status === 429) {
+        // Handle rate limiting
+        const retrySeconds = err.retryAfter || 60 // Default to 60 seconds if no header
+        setRateLimitCountdown(retrySeconds)
+        setError(null) // Clear generic error for rate limiting
+      } else {
+        const msg = err instanceof Error ? err.message : 'Unexpected error'
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
@@ -160,6 +177,17 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <span>{error}</span>
+              </div>
+            )}
+
+            {rateLimitCountdown !== null && (
+              <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+                <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>
+                  Rate limited — retry in {rateLimitCountdown}s
+                </span>
               </div>
             )}
           </div>

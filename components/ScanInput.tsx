@@ -32,6 +32,18 @@ export default function ScanInput({ onScan, loading, countdown = 0, initialValue
     }
   }
 
+  useEffect(() => {
+    if (externalCode !== undefined) {
+      setCode(externalCode)
+      setMode('code')
+    }
+  }, [externalCode])
+
+  function handleCodeChange(value: string) {
+    setCode(value)
+    onCodeChange?.(value)
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const source =
@@ -109,7 +121,7 @@ export default function ScanInput({ onScan, loading, countdown = 0, initialValue
           <textarea
             ref={textareaRef}
             value={code}
-            onChange={e => setCode(e.target.value)}
+            onChange={e => handleCodeChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`#![no_std]\nuse soroban_sdk::{contract, contractimpl, Env};\n\n#[contract]\npub struct MyContract;\n\n#[contractimpl]\nimpl MyContract {\n    pub fn hello(env: Env) -> String {\n        // paste your contract here...\n    }\n}`}
             rows={16}

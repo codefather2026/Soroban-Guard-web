@@ -34,6 +34,30 @@ export function generateMetadata({ searchParams }: Props): Metadata {
     }
   }, [router, searchParams])
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (findings && (e.key === 'j' || e.key === 'k')) {
+        e.preventDefault()
+        const current = navIndex ?? -1
+        let next
+        if (e.key === 'j') {
+          next = Math.min(current + 1, findings.length - 1)
+        } else {
+          next = Math.max(current - 1, 0)
+        }
+        setNavIndex(next)
+        // Scroll to the finding
+        const element = document.querySelector(`[data-finding-index="${next}"]`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [findings, navIndex])
+
   function handleScanAnother() {
     sessionStorage.removeItem('sg_findings')
     router.push('/')
@@ -184,6 +208,7 @@ export function generateMetadata({ searchParams }: Props): Metadata {
                 const order: Record<Severity, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 }
                 return order[a.severity] - order[b.severity]
               })}
+              forceExpandedIndex={navIndex}
             />
           </div>
         )}

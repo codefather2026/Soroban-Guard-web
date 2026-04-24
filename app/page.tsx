@@ -209,14 +209,12 @@ function HomePage() {
           {/* Recent scans */}
           {walletKey && scanHistory.length > 0 && (
             <div className="mt-8 rounded-2xl border border-[#2a2d3a] bg-[#1a1d27] p-6">
-              <h3 className="mb-4 text-lg font-semibold text-white">Your recent scans</h3>
-              <div className="space-y-2">
-                {scanHistory.slice(0, 5).map((record, idx) => (
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Your recent scans</h3>
+                {selectedScans.length === 2 && (
                   <button
-                    key={idx}
-                    onClick={() => handleHistoryClick(record.contractId)}
-                    disabled={loading}
-                    className="w-full rounded-lg border border-[#2a2d3a] bg-[#12151f] p-3 text-left transition hover:border-indigo-500/40 hover:bg-[#1a1d27] disabled:opacity-50"
+                    onClick={handleCompare}
+                    className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-500"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -248,8 +246,8 @@ function HomePage() {
                           )}
                         </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -324,6 +322,19 @@ function HomePage() {
           </div>
         </section>
       </main>
+
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="rounded-lg bg-white p-8 text-center text-black shadow-2xl">
+            <svg className="mx-auto h-12 w-12 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            <h3 className="mt-4 text-lg font-semibold">Drop your .rs file here</h3>
+            <p className="mt-2 text-sm text-gray-600">Upload a Rust source file to scan for vulnerabilities</p>
+          </div>
+        </div>
+      )}
 
       <footer className="border-t border-[var(--border)] py-8 text-center text-sm text-slate-600">
         <p>

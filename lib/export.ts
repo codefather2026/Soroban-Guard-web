@@ -30,6 +30,22 @@ function escapeCsv(value: any) {
   return s
 }
 
+export function exportEmail(findings: Finding[]): string {
+  const subject = encodeURIComponent('Soroban Guard Scan Results')
+  let body: string
+  if (findings.length === 0) {
+    body = 'No vulnerabilities found.'
+  } else {
+    body = findings
+      .map(
+        (f, i) =>
+          `${i + 1}. [${f.severity}] ${f.check_name}\n   Function: ${f.function_name}\n   File: ${f.file_path}, Line: ${f.line}\n   ${f.description}`,
+      )
+      .join('\n\n')
+  }
+  return `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`
+}
+
 export function exportCsv(findings: Finding[]) {
   try {
     const headers = ['severity', 'check_name', 'function_name', 'file_path', 'line', 'description']

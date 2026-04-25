@@ -4,16 +4,18 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Finding, Severity } from '@/types/findings'
 import { decodeFindings } from '@/lib/share'
+import { exportEmail } from '@/lib/export'
 import FindingsTable from '@/components/FindingsTable'
 import EmptyState from '@/components/EmptyState'
 import SeverityBadge from '@/components/SeverityBadge'
 import ThemeToggle from '@/components/ThemeToggle'
+import { useToast } from '@/lib/toast'
 
 export default function ResultsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { show } = useToast()
   const [findings, setFindings] = useState<Finding[] | null>(null)
-  const [copied, setCopied] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -55,8 +57,7 @@ export default function ResultsPage() {
   function handleCopyJson() {
     const url = window.location.href
     navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    show('Link copied!', 'success')
   }
 
   if (findings === null) {
@@ -100,6 +101,12 @@ export default function ResultsPage() {
             Soroban Guard
           </button>
           <div className="flex items-center gap-3">
+            <a
+              href={exportEmail(findings)}
+              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm text-slate-400 transition hover:text-white"
+            >
+              Email summary
+            </a>
             <button
               onClick={handleScanAnother}
               className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-500"
@@ -114,9 +121,8 @@ export default function ResultsPage() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         {/* Summary bar */}
         <div className="mb-8">
-          <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white">Scan Results</h1>
-            <div className="relative">
               <button
                 onClick={handleCopyJson}
                 disabled={!canCopy}
@@ -127,13 +133,7 @@ export default function ResultsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </button>
-              {copied && (
-                <div className="absolute right-0 top-full mt-2 whitespace-nowrap rounded-lg bg-green-600 px-3 py-1 text-xs text-white">
-                  Copied!
-                </div>
-              )}
             </div>
-          </div>
           <p className="mb-6 text-sm text-slate-500">
             {findings.length === 0
               ? 'No issues detected.'

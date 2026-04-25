@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { WalletProvider } from '@/lib/WalletContext'
+import { ToastProvider } from '@/lib/toast'
+import ToastContainer from '@/components/ToastContainer'
 
 export const metadata: Metadata = {
   title: 'Soroban Guard — Smart Contract Security Scanner',
@@ -40,7 +42,12 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <WalletProvider>{children}</WalletProvider>
+        <WalletProvider>
+          <ToastProvider>
+            {children}
+            <ToastContainer />
+          </ToastProvider>
+        </WalletProvider>
       </body>
     </html>
   )

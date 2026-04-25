@@ -18,6 +18,7 @@ import type { ContractScanRecord } from '@/types/stellar'
 import { NETWORKS } from '@/types/stellar'
 import { addRecord } from '@/lib/history'
 import { saveSourceCode } from '@/lib/codeStore'
+import { FEATURED_CONTRACTS } from '@/lib/featuredContracts'
 
 export default function Page() {
   return (
@@ -266,6 +267,12 @@ function HomePage() {
           )}
         </section>
 
+        {/* Try a public contract */}
+        <FeaturedContracts onSelect={(contractId) => {
+          setManualNetwork(NETWORKS.testnet)
+          handleScan(contractId, 'contractId')
+        }} />
+
         {/* What is Soroban? */}
         <section className="border-t border-[var(--border)] py-12">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
@@ -508,5 +515,36 @@ function RepoCard({
       </div>
       <p className="text-xs leading-relaxed text-slate-500">{description}</p>
     </a>
+  )
+}
+
+function FeaturedContracts({ onSelect }: { onSelect: (contractId: string) => void }) {
+  return (
+    <section className="border-t border-[var(--border)] py-12">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <div className="mb-4 flex items-center gap-2">
+          <h2 className="text-base font-semibold text-white">Try a public contract</h2>
+          <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-xs text-sky-400">
+            testnet
+          </span>
+        </div>
+        <p className="mb-4 text-sm text-slate-500">
+          Click any card to pre-fill the scanner with a real Soroban testnet contract.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {FEATURED_CONTRACTS.map(c => (
+            <button
+              key={c.contractId}
+              onClick={() => onSelect(c.contractId)}
+              className="rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-4 text-left transition hover:border-indigo-500/40 hover:bg-[var(--bg-tertiary)]"
+            >
+              <p className="mb-1 text-sm font-medium text-slate-200">{c.name}</p>
+              <p className="mb-2 text-xs text-slate-500">{c.description}</p>
+              <p className="truncate font-mono text-xs text-slate-600">{c.contractId}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
